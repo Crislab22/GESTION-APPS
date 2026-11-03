@@ -1,0 +1,377 @@
+{
+  "entities": {
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Administrador autenticado de la aplicación BetManager Pro",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del administrador en Firebase Auth" },
+        "email": { "type": "string", "description": "Correo electrónico del administrador" },
+        "displayName": { "type": "string", "description": "Nombre del administrador" },
+        "role": { "type": "string", "description": "Rol del administrador (OWNER, ADMIN, AUDITOR)" },
+        "baseCurrency": { "type": "string", "description": "Moneda base de visualización" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Fecha de creación (FieldValue.serverTimestamp())" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Fecha de actualización (FieldValue.serverTimestamp())" }
+      },
+      "required": ["userId", "email", "displayName", "role", "baseCurrency", "createdAt", "updatedAt"]
+    },
+    "AccountHolder": {
+      "title": "AccountHolder",
+      "description": "Titular de cuentas de casas de apuestas",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "country": { "type": "string" },
+        "contactInfo": { "type": "string" },
+        "joinDate": { "type": "string" },
+        "holderType": { "type": "string", "description": "PROPIA | TERCERO" },
+        "commissionPct": { "type": "number" },
+        "commissionMode": { "type": "string", "description": "PORCENTAJE_BENEFICIO | FIJO_PERIODO | PERSONALIZADO" },
+        "settlementPeriod": { "type": "string", "description": "SEMANAL | QUINCENAL | MENSUAL | MANUAL" },
+        "compensatePreviousLosses": { "type": "boolean" },
+        "lastCommissionPaidDate": { "type": "string" },
+        "pendingCommissionCents": { "type": "integer" },
+        "notes": { "type": "string" },
+        "status": { "type": "string", "description": "ACTIVO | INACTIVO | ARCHIVADO" },
+        "authorizationRef": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "country", "joinDate", "holderType", "commissionPct", "commissionMode", "settlementPeriod", "compensatePreviousLosses", "pendingCommissionCents", "status", "createdAt", "updatedAt"]
+    },
+    "Bookmaker": {
+      "title": "Bookmaker",
+      "description": "Casa de apuestas del catálogo maestro y disponibilidad por país",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "brandName": { "type": "string" },
+        "country": { "type": "string" },
+        "domain": { "type": "string" },
+        "operatorCompany": { "type": "string" },
+        "platformProvider": { "type": "string" },
+        "oddsProvider": { "type": "string" },
+        "primaryCurrency": { "type": "string" },
+        "regulatoryStatus": { "type": "string" },
+        "verificationSource": { "type": "string" },
+        "verificationDate": { "type": "string" },
+        "itfAvailability": { "type": "string", "description": "SI | NO | PARCIAL | POR_VERIFICAR" },
+        "liveBettingAvailable": { "type": "string" },
+        "marketNotes": { "type": "string" },
+        "lastCheckedDate": { "type": "string" },
+        "verificationEase": { "type": "string", "description": "FACIL | MEDIA | DIFICIL | SIN_EVALUAR" },
+        "withdrawalEase": { "type": "string", "description": "FACIL | MEDIA | DIFICIL | SIN_EVALUAR" },
+        "estimatedWithdrawalTime": { "type": "string" },
+        "minDepositCents": { "type": "integer" },
+        "minWithdrawalCents": { "type": "integer" },
+        "paymentMethods": { "type": "string" },
+        "knownFees": { "type": "string" },
+        "knownKycRequirements": { "type": "string" },
+        "operationalNotes": { "type": "string" },
+        "dataReliability": { "type": "string", "description": "VERIFICADO | REFERENCIA_PROVISIONAL | USUARIO" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "brandName", "country", "domain", "primaryCurrency", "regulatoryStatus", "itfAvailability", "verificationEase", "withdrawalEase", "dataReliability", "createdAt", "updatedAt"]
+    },
+    "BookmakerRelation": {
+      "title": "BookmakerRelation",
+      "description": "Relaciones entre casas gemelas y proveedores",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "relationType": { "type": "string", "description": "MISMO_OPERADOR | MISMA_PLATAFORMA | MISMO_SPORTSBOOK | MISMO_PROVEEDOR_CUOTAS | RELACION_OPERATIVA" },
+        "bookmakerIds": { "type": "string", "description": "IDs o nombres separados por coma" },
+        "bookmakerNames": { "type": "string" },
+        "affectedCountries": { "type": "string" },
+        "evidenceSource": { "type": "string" },
+        "confidenceLevel": { "type": "string", "description": "ALTO | MEDIO | BAJO | POR_VERIFICAR" },
+        "checkDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "relationType", "bookmakerIds", "bookmakerNames", "affectedCountries", "confidenceLevel", "createdAt", "updatedAt"]
+    },
+    "BettingAccount": {
+      "title": "BettingAccount",
+      "description": "Cuenta individual de un titular en una casa de apuestas",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "holderId": { "type": "string" },
+        "holderName": { "type": "string" },
+        "bookmakerId": { "type": "string" },
+        "bookmakerName": { "type": "string" },
+        "country": { "type": "string" },
+        "username": { "type": "string" },
+        "internalAlias": { "type": "string" },
+        "currency": { "type": "string" },
+        "openDate": { "type": "string" },
+        "initialBalanceCents": { "type": "integer" },
+        "calculatedBalanceCents": { "type": "integer" },
+        "lastVerifiedBalanceCents": { "type": "integer" },
+        "lastCheckDate": { "type": "string" },
+        "lastActivityDate": { "type": "string" },
+        "verificationStatus": { "type": "string" },
+        "itfOverride": { "type": "string", "description": "HEREDAR | SI | NO | PARCIAL | POR_VERIFICAR" },
+        "customCommissionPct": { "type": "number" },
+        "hasCustomCommission": { "type": "boolean" },
+        "accountStatus": { "type": "string", "description": "PENDIENTE_APERTURA | PENDIENTE_VERIFICACION | ACTIVA | RESTRICCION_PARCIAL | LIMITADA | SUSPENDIDA | RETIRO_FINAL | CERRADA" },
+        "limitationDate": { "type": "string" },
+        "limitationCategory": { "type": "string" },
+        "limitationDescription": { "type": "string" },
+        "closureDate": { "type": "string" },
+        "closureReason": { "type": "string" },
+        "finalWithdrawalStatus": { "type": "string" },
+        "screenshotPath": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "holderId", "holderName", "bookmakerId", "bookmakerName", "country", "username", "currency", "openDate", "initialBalanceCents", "calculatedBalanceCents", "verificationStatus", "itfOverride", "accountStatus", "createdAt", "updatedAt"]
+    },
+    "Wallet": {
+      "title": "Wallet",
+      "description": "Billetera o caja central fuera de las casas de apuestas",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "walletType": { "type": "string", "description": "BANCO | BILLETERA_DIGITAL | EFECTIVO | CRIPTO | OTRO" },
+        "currency": { "type": "string" },
+        "initialBalanceCents": { "type": "integer" },
+        "currentBalanceCents": { "type": "integer" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "walletType", "currency", "initialBalanceCents", "currentBalanceCents", "createdAt", "updatedAt"]
+    },
+    "FinancialTransaction": {
+      "title": "FinancialTransaction",
+      "description": "Movimiento financiero auditable",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "description": "SALDO_INICIAL | DEPOSITO | RETIRO | RETIRO_PENDIENTE | RETIRO_COMPLETADO | RETIRO_RECHAZADO | RESULTADO_POSITIVO | RESULTADO_NEGATIVO | BONO | COMISION_CARGO | TRANSFERENCIA_INTERNA | AJUSTE_CONCILIACION | PAGO_COMISION" },
+        "holderId": { "type": "string" },
+        "holderName": { "type": "string" },
+        "bookmakerId": { "type": "string" },
+        "bookmakerName": { "type": "string" },
+        "accountId": { "type": "string" },
+        "accountUsername": { "type": "string" },
+        "walletId": { "type": "string" },
+        "walletName": { "type": "string" },
+        "destinationWalletId": { "type": "string" },
+        "transactionDate": { "type": "string" },
+        "currency": { "type": "string" },
+        "amountCents": { "type": "integer" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string", "description": "PENDIENTE | COMPLETADO | RECHAZADO | CANCELADO" },
+        "referenceCode": { "type": "string" },
+        "notes": { "type": "string" },
+        "receiptImagePath": { "type": "string" },
+        "exchangeRateApplied": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "transactionDate", "currency", "amountCents", "paymentMethod", "status", "createdAt", "updatedAt"]
+    },
+    "CommissionSettlement": {
+      "title": "CommissionSettlement",
+      "description": "Liquidación y pago de comisiones a titulares",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "holderId": { "type": "string" },
+        "holderName": { "type": "string" },
+        "periodLabel": { "type": "string" },
+        "includedAccounts": { "type": "string" },
+        "currency": { "type": "string" },
+        "eligibleProfitCents": { "type": "integer" },
+        "manualAdjustmentCents": { "type": "integer" },
+        "adjustmentReason": { "type": "string" },
+        "appliedPct": { "type": "number" },
+        "generatedCommissionCents": { "type": "integer" },
+        "paidAmountCents": { "type": "integer" },
+        "pendingAmountCents": { "type": "integer" },
+        "status": { "type": "string", "description": "PENDIENTE | PARCIAL | PAGADA" },
+        "paymentDate": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "receiptPath": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "holderId", "holderName", "periodLabel", "currency", "eligibleProfitCents", "appliedPct", "generatedCommissionCents", "paidAmountCents", "pendingAmountCents", "status", "createdAt", "updatedAt"]
+    },
+    "VerificationRequirement": {
+      "title": "VerificationRequirement",
+      "description": "Requisito o tarea de verificación KYC/Operativa",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "accountLabel": { "type": "string" },
+        "holderName": { "type": "string" },
+        "bookmakerName": { "type": "string" },
+        "requirementType": { "type": "string" },
+        "status": { "type": "string", "description": "PENDIENTE | EN_REVISION | RESUELTO | VENCIDO" },
+        "requestDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "priority": { "type": "string", "description": "ALTA | MEDIA | BAJA" },
+        "resolutionDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "accountId", "accountLabel", "requirementType", "status", "requestDate", "priority", "createdAt", "updatedAt"]
+    },
+    "StatusHistoryRecord": {
+      "title": "StatusHistoryRecord",
+      "description": "Historial de restricciones, cambios de estado y auditoría",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "entityType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "entityLabel": { "type": "string" },
+        "previousState": { "type": "string" },
+        "newState": { "type": "string" },
+        "reason": { "type": "string" },
+        "changeDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "entityType", "entityId", "entityLabel", "previousState", "newState", "reason", "changeDate", "createdAt", "updatedAt"]
+    },
+    "AttachmentRecord": {
+      "title": "AttachmentRecord",
+      "description": "Comprobante o captura adjunta",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "ownerType": { "type": "string", "description": "MOVIMIENTO | CUENTA | COMISION | TITULAR" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "localUriPath": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "ownerType", "ownerId", "title", "localUriPath", "createdAt", "updatedAt"]
+    },
+    "AlertReminder": {
+      "title": "AlertReminder",
+      "description": "Alerta o recordatorio operativo",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "alertType": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": { "type": "string", "description": "ALTA | MEDIA | INFO" },
+        "relatedEntityId": { "type": "string" },
+        "isDismissed": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "alertType", "title", "message", "severity", "isDismissed", "createdAt", "updatedAt"]
+    },
+    "BalanceReconciliation": {
+      "title": "BalanceReconciliation",
+      "description": "Registro de conciliación de saldo entre libro y casa de apuestas",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "accountLabel": { "type": "string" },
+        "currency": { "type": "string" },
+        "calculatedBalanceCents": { "type": "integer" },
+        "observedBalanceCents": { "type": "integer" },
+        "differenceCents": { "type": "integer" },
+        "reason": { "type": "string" },
+        "reconciliationDate": { "type": "string" },
+        "adjustmentTransactionId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "accountId", "accountLabel", "currency", "calculatedBalanceCents", "observedBalanceCents", "differenceCents", "reason", "reconciliationDate", "createdAt", "updatedAt"]
+    },
+    "ExchangeRateRecord": {
+      "title": "ExchangeRateRecord",
+      "description": "Tipo de cambio multimoneda con fuente y fecha",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "fromCurrency": { "type": "string" },
+        "toCurrency": { "type": "string" },
+        "rate": { "type": "number" },
+        "source": { "type": "string" },
+        "rateDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "fromCurrency", "toCurrency", "rate", "source", "rateDate", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Perfil y configuración del administrador autenticado"
+    },
+    "/users/{userId}/holders/{holderId}": {
+      "schema": { "$ref": "#/entities/AccountHolder" },
+      "description": "Titulares de cuentas administrados por el usuario"
+    },
+    "/users/{userId}/bookmakers/{bookmakerId}": {
+      "schema": { "$ref": "#/entities/Bookmaker" },
+      "description": "Catálogo maestro de casas de apuestas y propiedades por país"
+    },
+    "/users/{userId}/relations/{relationId}": {
+      "schema": { "$ref": "#/entities/BookmakerRelation" },
+      "description": "Casas gemelas y relaciones entre proveedores"
+    },
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/BettingAccount" },
+      "description": "Cuentas individuales vinculadas a titulares y casas"
+    },
+    "/users/{userId}/wallets/{walletId}": {
+      "schema": { "$ref": "#/entities/Wallet" },
+      "description": "Billeteras o cajas centrales del administrador"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/FinancialTransaction" },
+      "description": "Movimientos financieros auditables"
+    },
+    "/users/{userId}/commissions/{commissionId}": {
+      "schema": { "$ref": "#/entities/CommissionSettlement" },
+      "description": "Liquidaciones y pagos de comisiones a titulares"
+    },
+    "/users/{userId}/requirements/{requirementId}": {
+      "schema": { "$ref": "#/entities/VerificationRequirement" },
+      "description": "Requisitos y verificaciones KYC por cuenta"
+    },
+    "/users/{userId}/history/{historyId}": {
+      "schema": { "$ref": "#/entities/StatusHistoryRecord" },
+      "description": "Historial de cambios de estado y auditoría"
+    },
+    "/users/{userId}/attachments/{attachmentId}": {
+      "schema": { "$ref": "#/entities/AttachmentRecord" },
+      "description": "Comprobantes y capturas de pantalla"
+    },
+    "/users/{userId}/alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/AlertReminder" },
+      "description": "Alertas y recordatorios operativos"
+    },
+    "/users/{userId}/reconciliations/{reconciliationId}": {
+      "schema": { "$ref": "#/entities/BalanceReconciliation" },
+      "description": "Conciliaciones de saldo entre libro y operador"
+    },
+    "/users/{userId}/exchange_rates/{rateId}": {
+      "schema": { "$ref": "#/entities/ExchangeRateRecord" },
+      "description": "Tasas de cambio registradas con fuente y fecha"
+    }
+  }
+}

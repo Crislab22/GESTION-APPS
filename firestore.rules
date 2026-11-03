@@ -1,0 +1,467 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTimestampsCreate(data) {
+      return data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTimestampsUpdate(data, oldData) {
+      return data.createdAt == oldData.createdAt &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isOptString(data, field, maxLen) {
+      return !(field in data) || data[field] == null || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isReqString(data, field, maxLen) {
+      return (field in data) && data[field] is string && data[field].size() >= 1 && data[field].size() <= maxLen;
+    }
+
+    function isStringUpTo(data, field, maxLen) {
+      return (field in data) && data[field] is string && data[field].size() <= maxLen;
+    }
+
+    function isValidAdminUser(data, userId) {
+      return data.userId == userId &&
+             isStringUpTo(data, 'email', 200) &&
+             isStringUpTo(data, 'displayName', 150) &&
+             isReqString(data, 'role', 40) &&
+             isReqString(data, 'baseCurrency', 10);
+    }
+
+    function isValidAccountHolder(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'name', 120) &&
+             isReqString(data, 'country', 60) &&
+             isOptString(data, 'contactInfo', 250) &&
+             isStringUpTo(data, 'joinDate', 40) &&
+             isReqString(data, 'holderType', 40) &&
+             (data.commissionPct is int || data.commissionPct is float) &&
+             data.commissionPct >= 0 && data.commissionPct <= 100 &&
+             isReqString(data, 'commissionMode', 50) &&
+             isReqString(data, 'settlementPeriod', 40) &&
+             data.compensatePreviousLosses is bool &&
+             isOptString(data, 'lastCommissionPaidDate', 40) &&
+             data.pendingCommissionCents is int &&
+             isOptString(data, 'notes', 1000) &&
+             isReqString(data, 'status', 30) &&
+             isOptString(data, 'authorizationRef', 300);
+    }
+
+    function isValidBookmaker(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'brandName', 100) &&
+             isReqString(data, 'country', 60) &&
+             isStringUpTo(data, 'domain', 200) &&
+             isOptString(data, 'operatorCompany', 150) &&
+             isOptString(data, 'platformProvider', 120) &&
+             isOptString(data, 'oddsProvider', 120) &&
+             isReqString(data, 'primaryCurrency', 10) &&
+             isReqString(data, 'regulatoryStatus', 40) &&
+             isOptString(data, 'verificationSource', 250) &&
+             isOptString(data, 'verificationDate', 40) &&
+             isReqString(data, 'itfAvailability', 30) &&
+             isOptString(data, 'liveBettingAvailable', 30) &&
+             isOptString(data, 'marketNotes', 1000) &&
+             isOptString(data, 'lastCheckedDate', 40) &&
+             isReqString(data, 'verificationEase', 30) &&
+             isReqString(data, 'withdrawalEase', 30) &&
+             isOptString(data, 'estimatedWithdrawalTime', 120) &&
+             (!('minDepositCents' in data) || data.minDepositCents is int) &&
+             (!('minWithdrawalCents' in data) || data.minWithdrawalCents is int) &&
+             isOptString(data, 'paymentMethods', 500) &&
+             isOptString(data, 'knownFees', 300) &&
+             isOptString(data, 'knownKycRequirements', 500) &&
+             isOptString(data, 'operationalNotes', 1000) &&
+             isReqString(data, 'dataReliability', 40);
+    }
+
+    function isValidBookmakerRelation(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'relationType', 60) &&
+             isStringUpTo(data, 'bookmakerIds', 500) &&
+             isReqString(data, 'bookmakerNames', 500) &&
+             isStringUpTo(data, 'affectedCountries', 250) &&
+             isOptString(data, 'evidenceSource', 300) &&
+             isReqString(data, 'confidenceLevel', 40) &&
+             isOptString(data, 'checkDate', 40) &&
+             isOptString(data, 'notes', 1000);
+    }
+
+    function isValidBettingAccount(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'holderId', 128) &&
+             isReqString(data, 'holderName', 120) &&
+             isReqString(data, 'bookmakerId', 128) &&
+             isReqString(data, 'bookmakerName', 100) &&
+             isReqString(data, 'country', 60) &&
+             isReqString(data, 'username', 100) &&
+             isOptString(data, 'internalAlias', 100) &&
+             isReqString(data, 'currency', 10) &&
+             isStringUpTo(data, 'openDate', 40) &&
+             data.initialBalanceCents is int &&
+             data.calculatedBalanceCents is int &&
+             (!('lastVerifiedBalanceCents' in data) || data.lastVerifiedBalanceCents is int) &&
+             isOptString(data, 'lastCheckDate', 40) &&
+             isOptString(data, 'lastActivityDate', 40) &&
+             isStringUpTo(data, 'verificationStatus', 50) &&
+             isReqString(data, 'itfOverride', 30) &&
+             (!('customCommissionPct' in data) || data.customCommissionPct is int || data.customCommissionPct is float) &&
+             (!('hasCustomCommission' in data) || data.hasCustomCommission is bool) &&
+             isReqString(data, 'accountStatus', 40) &&
+             isOptString(data, 'limitationDate', 40) &&
+             isOptString(data, 'limitationCategory', 80) &&
+             isOptString(data, 'limitationDescription', 500) &&
+             isOptString(data, 'closureDate', 40) &&
+             isOptString(data, 'closureReason', 300) &&
+             isOptString(data, 'finalWithdrawalStatus', 80) &&
+             isOptString(data, 'screenshotPath', 500) &&
+             isOptString(data, 'notes', 1000);
+    }
+
+    function isValidWallet(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'name', 100) &&
+             isReqString(data, 'walletType', 50) &&
+             isReqString(data, 'currency', 10) &&
+             data.initialBalanceCents is int &&
+             data.currentBalanceCents is int &&
+             isOptString(data, 'notes', 500);
+    }
+
+    function isValidFinancialTransaction(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'type', 50) &&
+             isOptString(data, 'holderId', 128) &&
+             isOptString(data, 'holderName', 120) &&
+             isOptString(data, 'bookmakerId', 128) &&
+             isOptString(data, 'bookmakerName', 100) &&
+             isOptString(data, 'accountId', 128) &&
+             isOptString(data, 'accountUsername', 100) &&
+             isOptString(data, 'walletId', 128) &&
+             isOptString(data, 'walletName', 100) &&
+             isOptString(data, 'destinationWalletId', 128) &&
+             isReqString(data, 'transactionDate', 40) &&
+             isReqString(data, 'currency', 10) &&
+             data.amountCents is int && data.amountCents >= 0 &&
+             isStringUpTo(data, 'paymentMethod', 100) &&
+             isReqString(data, 'status', 30) &&
+             isOptString(data, 'referenceCode', 120) &&
+             isOptString(data, 'notes', 1000) &&
+             isOptString(data, 'receiptImagePath', 500) &&
+             (!('exchangeRateApplied' in data) || data.exchangeRateApplied is int || data.exchangeRateApplied is float);
+    }
+
+    function isValidCommissionSettlement(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'holderId', 128) &&
+             isReqString(data, 'holderName', 120) &&
+             isReqString(data, 'periodLabel', 80) &&
+             isOptString(data, 'includedAccounts', 500) &&
+             isReqString(data, 'currency', 10) &&
+             data.eligibleProfitCents is int &&
+             (!('manualAdjustmentCents' in data) || data.manualAdjustmentCents is int) &&
+             isOptString(data, 'adjustmentReason', 300) &&
+             (data.appliedPct is int || data.appliedPct is float) &&
+             data.generatedCommissionCents is int &&
+             data.paidAmountCents is int &&
+             data.pendingAmountCents is int &&
+             isReqString(data, 'status', 30) &&
+             isOptString(data, 'paymentDate', 40) &&
+             isOptString(data, 'paymentMethod', 100) &&
+             isOptString(data, 'receiptPath', 500);
+    }
+
+    function isValidVerificationRequirement(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'accountId', 128) &&
+             isReqString(data, 'accountLabel', 150) &&
+             isOptString(data, 'holderName', 120) &&
+             isOptString(data, 'bookmakerName', 100) &&
+             isReqString(data, 'requirementType', 80) &&
+             isReqString(data, 'status', 30) &&
+             isStringUpTo(data, 'requestDate', 40) &&
+             isOptString(data, 'dueDate', 40) &&
+             isReqString(data, 'priority', 20) &&
+             isOptString(data, 'resolutionDate', 40) &&
+             isOptString(data, 'notes', 1000);
+    }
+
+    function isValidStatusHistoryRecord(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'entityType', 40) &&
+             isReqString(data, 'entityId', 128) &&
+             isReqString(data, 'entityLabel', 150) &&
+             isStringUpTo(data, 'previousState', 60) &&
+             isReqString(data, 'newState', 60) &&
+             isStringUpTo(data, 'reason', 500) &&
+             isStringUpTo(data, 'changeDate', 40);
+    }
+
+    function isValidAttachmentRecord(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'ownerType', 40) &&
+             isReqString(data, 'ownerId', 128) &&
+             isReqString(data, 'title', 150) &&
+             isReqString(data, 'localUriPath', 500) &&
+             isOptString(data, 'notes', 500);
+    }
+
+    function isValidAlertReminder(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'alertType', 50) &&
+             isReqString(data, 'title', 150) &&
+             isReqString(data, 'message', 500) &&
+             isReqString(data, 'severity', 20) &&
+             isOptString(data, 'relatedEntityId', 128) &&
+             data.isDismissed is bool;
+    }
+
+    function isValidBalanceReconciliation(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'accountId', 128) &&
+             isReqString(data, 'accountLabel', 150) &&
+             isReqString(data, 'currency', 10) &&
+             data.calculatedBalanceCents is int &&
+             data.observedBalanceCents is int &&
+             data.differenceCents is int &&
+             isReqString(data, 'reason', 500) &&
+             isStringUpTo(data, 'reconciliationDate', 40) &&
+             isOptString(data, 'adjustmentTransactionId', 128);
+    }
+
+    function isValidExchangeRateRecord(data, userId) {
+      return data.userId == userId &&
+             isReqString(data, 'fromCurrency', 10) &&
+             isReqString(data, 'toCurrency', 10) &&
+             (data.rate is int || data.rate is float) && data.rate > 0 &&
+             isReqString(data, 'source', 120) &&
+             isStringUpTo(data, 'rateDate', 40);
+    }
+
+    // 1. AdminUser Profile (/users/{userId})
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) &&
+                       isValidAdminUser(incoming(), userId) &&
+                       isValidTimestampsCreate(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) &&
+                       isValidAdminUser(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       isValidTimestampsUpdate(incoming(), existing());
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // 2. Account Holders (/users/{userId}/holders/{holderId})
+      match /holders/{holderId} {
+        allow get: if isOwner(userId) && isValidId(holderId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(holderId) &&
+                         isValidAccountHolder(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(holderId) &&
+                         isValidAccountHolder(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(holderId);
+      }
+
+      // 3. Bookmakers (/users/{userId}/bookmakers/{bookmakerId})
+      match /bookmakers/{bookmakerId} {
+        allow get: if isOwner(userId) && isValidId(bookmakerId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(bookmakerId) &&
+                         isValidBookmaker(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(bookmakerId) &&
+                         isValidBookmaker(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(bookmakerId);
+      }
+
+      // 4. Bookmaker Relations (/users/{userId}/relations/{relationId})
+      match /relations/{relationId} {
+        allow get: if isOwner(userId) && isValidId(relationId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(relationId) &&
+                         isValidBookmakerRelation(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(relationId) &&
+                         isValidBookmakerRelation(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(relationId);
+      }
+
+      // 5. Betting Accounts (/users/{userId}/accounts/{accountId})
+      match /accounts/{accountId} {
+        allow get: if isOwner(userId) && isValidId(accountId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(accountId) &&
+                         isValidBettingAccount(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(accountId) &&
+                         isValidBettingAccount(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(accountId);
+      }
+
+      // 6. Wallets (/users/{userId}/wallets/{walletId})
+      match /wallets/{walletId} {
+        allow get: if isOwner(userId) && isValidId(walletId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(walletId) &&
+                         isValidWallet(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(walletId) &&
+                         isValidWallet(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(walletId);
+      }
+
+      // 7. Financial Transactions (/users/{userId}/transactions/{transactionId})
+      match /transactions/{transactionId} {
+        allow get: if isOwner(userId) && isValidId(transactionId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(transactionId) &&
+                         isValidFinancialTransaction(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(transactionId) &&
+                         isValidFinancialTransaction(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(transactionId);
+      }
+
+      // 8. Commission Settlements (/users/{userId}/commissions/{commissionId})
+      match /commissions/{commissionId} {
+        allow get: if isOwner(userId) && isValidId(commissionId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(commissionId) &&
+                         isValidCommissionSettlement(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(commissionId) &&
+                         isValidCommissionSettlement(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(commissionId);
+      }
+
+      // 9. Verification Requirements (/users/{userId}/requirements/{requirementId})
+      match /requirements/{requirementId} {
+        allow get: if isOwner(userId) && isValidId(requirementId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(requirementId) &&
+                         isValidVerificationRequirement(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(requirementId) &&
+                         isValidVerificationRequirement(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(requirementId);
+      }
+
+      // 10. Status History Records (/users/{userId}/history/{historyId})
+      match /history/{historyId} {
+        allow get: if isOwner(userId) && isValidId(historyId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(historyId) &&
+                         isValidStatusHistoryRecord(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(historyId) &&
+                         isValidStatusHistoryRecord(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(historyId);
+      }
+
+      // 11. Attachment Records (/users/{userId}/attachments/{attachmentId})
+      match /attachments/{attachmentId} {
+        allow get: if isOwner(userId) && isValidId(attachmentId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(attachmentId) &&
+                         isValidAttachmentRecord(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(attachmentId) &&
+                         isValidAttachmentRecord(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(attachmentId);
+      }
+
+      // 12. Alert Reminders (/users/{userId}/alerts/{alertId})
+      match /alerts/{alertId} {
+        allow get: if isOwner(userId) && isValidId(alertId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(alertId) &&
+                         isValidAlertReminder(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(alertId) &&
+                         isValidAlertReminder(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(alertId);
+      }
+
+      // 13. Balance Reconciliations (/users/{userId}/reconciliations/{reconciliationId})
+      match /reconciliations/{reconciliationId} {
+        allow get: if isOwner(userId) && isValidId(reconciliationId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(reconciliationId) &&
+                         isValidBalanceReconciliation(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(reconciliationId) &&
+                         isValidBalanceReconciliation(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(reconciliationId);
+      }
+
+      // 14. Exchange Rates (/users/{userId}/exchange_rates/{rateId})
+      match /exchange_rates/{rateId} {
+        allow get: if isOwner(userId) && isValidId(rateId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(rateId) &&
+                         isValidExchangeRateRecord(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(rateId) &&
+                         isValidExchangeRateRecord(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsUpdate(incoming(), existing());
+        allow delete: if isOwner(userId) && isValidId(rateId);
+      }
+    }
+  }
+}

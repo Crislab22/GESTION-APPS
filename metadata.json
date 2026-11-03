@@ -1,0 +1,6 @@
+{
+  "name": "BetManager Pro",
+  "description": "Sistema profesional de administración de capital, cuentas, titulares, movimientos financieros y comisiones para casas de apuestas deportivas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
